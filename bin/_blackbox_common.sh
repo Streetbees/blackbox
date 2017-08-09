@@ -23,7 +23,7 @@ source "${0%/*}"/_stack_lib.sh
 : "${EDITOR:=vi}" ;
 
 # Allow overriding gpg command
-: "${GPG:=gpg}" ;
+: "${GPG:=gpg2}" ;
 
 function physical_directory_of() {
   local d=$(dirname "$1")
@@ -63,8 +63,8 @@ export REPOBASE=$(physical_directory_of "$REPOBASE")
 # after determining what we believe to be the answer.
 
 if [[ -n "$BLACKBOX_REPOBASE" ]]; then
-	echo "Using custom repobase: $BLACKBOX_REPOBASE"
-	export REPOBASE="$BLACKBOX_REPOBASE"
+    echo "Using custom repobase: $BLACKBOX_REPOBASE"
+    export REPOBASE="$BLACKBOX_REPOBASE"
 fi
 
 KEYRINGDIR="$REPOBASE/$BLACKBOXDATA"
@@ -144,11 +144,7 @@ function fail_if_keychain_has_secrets() {
 }
 
 function get_pubring_path() {
-  if [[ -f "${KEYRINGDIR}/pubring.gpg" ]]; then
-    echo "${KEYRINGDIR}/pubring.gpg"
-  else
     echo "${KEYRINGDIR}/pubring.kbx"
-  fi
 }
 
 # Output the unencrypted filename.
@@ -171,8 +167,8 @@ function prepare_keychain() {
   # NB: We must export the keys to a format that can be imported.
   make_self_deleting_tempfile keyringasc
   export LANG="C.UTF-8"
-  $GPG --export --keyring "$(get_pubring_path)" >"$keyringasc"
-  $GPG --import "$keyringasc" 2>&1 | egrep -v 'not changed$' >&2
+  echo "========== Keyring dir location: $(get_pubring_path)"
+  $GPG --keyring "$(get_pubring_path)" --export | $GPG --import
   echo '========== Importing keychain: DONE' >&2
 }
 
@@ -671,3 +667,4 @@ function gpg_agent_notice() {
     read -r -p 'Press CTRL-C now to stop. ENTER to continue: '
   fi
 }
+
